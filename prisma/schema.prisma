@@ -1,7 +1,55 @@
 generator client {
-  provider = "prisma-client-js"
+   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+   provider = "postgresql"
+}
+
+model User {
+   id                   String               @id @default(cuid())
+   username             String               @unique
+   createdAt            DateTime             @default(now())
+   leaderboardEntries   LeaderboardEntry[]   
+   gameSessions         GameSession[]
+}
+
+model GamePreset {
+   id                   Int      @id @default(autoincrement())
+   name                 String
+   
+   initialState         Json
+   createdAt            DateTime @default(now())
+
+   leaderboardEntries   LeaderboardEntry[]
+   gameSessions         GameSession[]
+}
+
+model GameSession {
+   id             String      @id @default(cuid())
+   userId         String
+   gamePresetId   Int
+   currentState   Json
+   moves          Int         @default(0)
+   startedAt      DateTime    @default(now())
+   finishedAt     DateTime?   
+   isCompleted    Boolean     @default(false)
+
+   user           User        @relation(fields: [userId], references: [id])
+   gamePreset     GamePreset  @relation(fields: [gamePresetId], references: [id])
+}
+
+model LeaderboardEntry {
+   id             String      @id @default(cuid())
+   userId         String
+   gamePresetId   Int
+   moves          Int
+   timeSeconds    Int
+   completedAt    DateTime    @default(now())
+
+   user           User        @relation(fields: [userId], references: [id])
+   gamePreset     GamePreset  @relation(fields: [gamePresetId], references: [id])
+
+   @@unique([userId, gamePresetId])
+   @@index([gamePresetId, timeSeconds])
 }
